@@ -36,6 +36,22 @@ toggleTranslationButton.addEventListener('click', () => {
   }
 });
 
+document.addEventListener('selectionchange', () => {
+  const selectedText = window.getSelection().toString().trim();
+  if (selectedText) {
+    chrome.runtime.sendMessage({ type: 'selectionChanged', selectedText });
+  }
+});
+
+// Add a message listener to update inputPrompt
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'updateInputPrompt' && request.selectedText) {
+    inputPrompt.value = request.selectedText;
+    buttonPrompt.removeAttribute('disabled');
+    updateDefinition(request.selectedText);
+  }
+});
+
 function initModel(generationConfig) {
   const safetySettings = [
     {
@@ -97,9 +113,12 @@ async function updateDefinition(word) {
   //document.body.querySelector('#definition-word').innerText = word;
 
   //use gemini to translate the word into Traditional Chinese
+  document.body.querySelector('#definition-text').textContent = 'loading...';
+
   const response = await GeminiTranslate(word);
   const paragraphs = response.split(/\r?\n/);
-  
+  //clear the definition-text
+  document.body.querySelector('#definition-text').textContent = '';
   for (let i = 0; i < paragraphs.length; i++) {
     const paragraph = paragraphs[i];
     if (paragraph) {

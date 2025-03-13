@@ -21,3 +21,15 @@ chrome.contextMenus.onClicked.addListener((data, tab) => {
   // Make sure the side panel is open.
   chrome.sidePanel.open({ tabId: tab.id });
 });
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === 'updateInputPrompt' && request.selectedText) {
+    chrome.storage.session.set({ lastWord: request.selectedText });
+
+    // Send message to side panel to update inputPrompt
+    chrome.runtime.sendMessage({ type: 'updateInputPrompt', selectedText: request.selectedText });
+
+    // Make sure the side panel is open.
+    chrome.sidePanel.open({ tabId: sender.tab.id });
+  }
+});
